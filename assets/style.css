@@ -1,0 +1,34 @@
+#vue-admin-app {
+    font-family: Arial, sans-serif;
+}
+
+#vue-admin-app nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 15px;
+}
+
+#vue-admin-app nav ul li {
+    display: inline;
+}
+
+#vue-admin-app nav ul li a {
+    text-decoration: none;
+    padding: 10px;
+    background-color: #0073aa;
+    color: white;
+    border-radius: 5px;
+}
+
+#vue-admin-app nav ul li a.active {
+    background-color: #00a0d2;
+}
+
+#vue-admin-app .content {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+}
