@@ -124,61 +124,66 @@ add_action('wp_ajax_fetch_blog_titles', 'fetch_blog_titles');
 
 // Delete a file by its path
 add_action('wp_ajax_delete_file_path', 'delete_file_path_handler');
-function delete_file_path_handler() {
+function delete_file_path_handler()
+{
     // Check nonce for security
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vue_admin_nonce')) {
         wp_send_json_error(['message' => 'Invalid nonce.']);
     }
 
     // Validate file path
-    $file_path = isset($_POST['file_path']) ? sanitize_text_field($_POST['file_path']) : '';
-    if (empty($file_path)) {
-        wp_send_json_error(['message' => 'File path is required.']);
+    $file_url = isset($_POST['file_path']) ? sanitize_text_field($_POST['file_path']) : '';
+    if (empty($file_url)) {
+        wp_send_json_error(['message' => 'File URL is required.']);
     }
 
-    // Extract the filename from the URL
+    // Parse the file path to get relative path
     $upload_dir = wp_get_upload_dir();
-    $relative_path = str_replace($upload_dir['baseurl'] . '/', '', $file_path);
+    $base_upload_dir = $upload_dir['basedir'];
+    $base_upload_url = $upload_dir['baseurl'];
 
-    // Get attachment ID by file path
-    global $wpdb;
-    $attachment_id = $wpdb->get_var($wpdb->prepare(
-        "SELECT ID FROM $wpdb->posts WHERE guid LIKE %s AND post_type = 'attachment'",
-        $file_path
-    ));
+    // Check if the file is within the uploads directory
+    if (strpos($file_url, $base_upload_url) === 0) {
+        $relative_path = str_replace($base_upload_url, '', $file_url);
+        $full_path = $base_upload_dir . $relative_path;
 
-    if (!$attachment_id) {
-        wp_send_json_error(['message' => 'File does not exist in the media library.']);
-    }
+        // Attempt to find the file in the media library
+        global $wpdb;
+        $attachment_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM $wpdb->posts WHERE guid = %s",
+            $file_url
+        ));
 
-    // Get all file paths associated with the attachment
-    $file_meta = wp_get_attachment_metadata($attachment_id);
-    $file_paths = [];
-    $file_paths[] = get_attached_file($attachment_id); // Original file
-
-    // Add all image sizes
-    if (!empty($file_meta['sizes'])) {
-        foreach ($file_meta['sizes'] as $size) {
-            $file_paths[] = $upload_dir['basedir'] . '/' . dirname($file_meta['file']) . '/' . $size['file'];
-        }
-    }
-
-    // Delete all files
-    $errors = [];
-    foreach ($file_paths as $path) {
-        if (file_exists($path)) {
-            if (!unlink($path)) {
-                $errors[] = $path;
+        if ($attachment_id) {
+            // If the file is in the media library, delete the attachment
+            if (wp_delete_attachment($attachment_id, true)) {
+                wp_send_json_success(['message' => 'File and associated media library entry deleted successfully.']);
+            } else {
+                wp_send_json_error(['message' => 'Failed to delete file from the media library.']);
+            }
+        } else {
+            // File exists but is not in the media library; delete it directly
+            if (file_exists($full_path)) {
+                if (unlink($full_path)) {
+                    wp_send_json_success(['message' => 'File deleted successfully (not in media library).']);
+                } else {
+                    wp_send_json_error(['message' => 'Failed to delete file directly.']);
+                }
+            } else {
+                wp_send_json_error(['message' => 'File does not exist in the uploads directory.']);
             }
         }
-    }
-
-    // Delete the attachment record from the database
-    wp_delete_attachment($attachment_id, true);
-
-    if (empty($errors)) {
-        wp_send_json_success(['message' => 'All files deleted successfully.']);
     } else {
-        wp_send_json_error(['message' => 'Some files could not be deleted.', 'errors' => $errors]);
+        // Handle custom file paths outside the uploads directory
+        $full_path = ABSPATH . $file_url; // Ensure it's an absolute path
+        if (file_exists($full_path)) {
+            if (unlink($full_path)) {
+                wp_send_json_success(['message' => 'Custom path file deleted successfully.']);
+            } else {
+                wp_send_json_error(['message' => 'Failed to delete custom path file.']);
+            }
+        } else {
+            wp_send_json_error(['message' => 'File does not exist in the custom path.']);
+        }
     }
 }
