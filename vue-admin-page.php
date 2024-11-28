@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Vue Admin SPA
  * Description: A WordPress plugin with Vue.js for admin menu and submenu as a Single Page Application (SPA).
- * Version: 1.0
+ * Version: 1.2
  * Author: Shoive
  */
 
@@ -70,6 +70,15 @@ function vue_admin_menu()
         'Delete Path',
         'manage_options',
         'vue-admin-page#/delete-path',
+        'vue_admin_render_page'
+    );
+
+    add_submenu_page(
+        'vue-admin-page',
+        'User Meta',
+        'User Meta',
+        'manage_options',
+        'vue-admin-page#/user-meta',
         'vue_admin_render_page'
     );
 }
@@ -186,4 +195,25 @@ function delete_file_path_handler()
             wp_send_json_error(['message' => 'File does not exist in the custom path.']);
         }
     }
+}
+add_action('wp_ajax_update_user_meta_value', 'update_user_meta_value');
+function update_user_meta_value()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vue_admin_nonce')) {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+    }
+
+    $user_id = intval($_POST['user_id']);
+    $meta_value = sanitize_text_field($_POST['meta_value']);
+    $meta_keys = json_decode(stripslashes($_POST['meta_keys']), true);
+
+    if (empty($user_id) || empty($meta_keys) || empty($meta_value)) {
+        wp_send_json_error(['message' => 'Missing required fields.']);
+    }
+
+    foreach ($meta_keys as $meta_key) {
+        update_user_meta($user_id, $meta_key, $meta_value);
+    }
+
+    wp_send_json_success(['message' => 'Notifications updated successfully.']);
 }

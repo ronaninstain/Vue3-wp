@@ -5,6 +5,7 @@
             <li><router-link to="/add-options">Add Options</router-link></li>
             <li><router-link to="/blog-titles">Blog Titles</router-link></li>
             <li><router-link to="/delete-path">Delete Path</router-link></li>
+            <li><router-link to="/user-meta">User Meta</router-link></li>
         </ul>
     </nav>
     <router-view></router-view>
