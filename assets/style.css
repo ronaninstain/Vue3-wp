@@ -32,3 +32,137 @@
     background-color: white;
     border: 1px solid #ccc;
 }
+
+#vue-admin-app {
+    font-family: Arial, sans-serif;
+}
+
+#vue-admin-app nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 15px;
+}
+
+#vue-admin-app nav ul li {
+    display: inline;
+}
+
+#vue-admin-app nav ul li a {
+    text-decoration: none;
+    padding: 10px;
+    background-color: #0073aa;
+    color: white;
+    border-radius: 5px;
+}
+
+#vue-admin-app nav ul li a.active {
+    background-color: #00a0d2;
+}
+
+#vue-admin-app .content {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+}
+
+#vue-admin-app nav ul li a {
+    display: inline-block;
+}
+
+#vue-admin-app {
+    margin: 10px 20px 0 2px;
+}
+
+#vue-admin-app label:has(input):last-child {
+    margin-bottom: 20px;
+}
+
+#vue-admin-app label {
+    display: block;
+    margin: 0 0 8px;
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+#vue-admin-app input {
+    color: #474d5c;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#vue-admin-app input:not([type="radio"]) {
+    display: block;
+    width: 43%;
+    height: 44px;
+    padding: 12px;
+    outline: none;
+    border-radius: 4px;
+    border: 1px solid #ebebeb;
+    background: #fff;
+    margin-bottom: 20px;
+}
+
+#vue-admin-app button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 8px 20px;
+    border: 1px solid #0073aa;
+    border-radius: 4px;
+    background: #0073aa;
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: normal;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+#vue-admin-app button:hover {
+    background: transparent;
+    color: #0073aa;
+}
+
+#vue-admin-app nav ul li a:not(.router-link-active) {
+    opacity: 0.7;
+}
+
+#vue-admin-app>div ul li a {
+    display: block;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 15px;
+    font-weight: 500;
+}
+
+#vue-admin-app>div ul li a:hover,
+#vue-admin-app>div ul li a:focus {
+    background: rgba(0, 0, 0, 0.05);
+    outline: none;
+    box-shadow: none;
+}
+
+#vue-admin-app>div ul {
+    border: 1px solid #dedede;
+}
+
+#vue-admin-app>div ul li {
+    margin: 0;
+}
+
+#vue-admin-app>div ul li:not(:last-child) {
+    border-bottom: 1px solid #dedede;
+}
+
+@media (max-width: 767px) {
+    #vue-admin-app nav ul {
+        flex-wrap: wrap;
+    }
+}
