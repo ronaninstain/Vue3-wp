@@ -75,10 +75,19 @@ function vue_admin_menu()
 
     add_submenu_page(
         'vue-admin-page',
-        'User Meta',
-        'User Meta',
+        'User Notifications',
+        'User Notifications',
         'manage_options',
         'vue-admin-page#/user-meta',
+        'vue_admin_render_page'
+    );
+
+    add_submenu_page(
+        'vue-admin-page',
+        'Update Certificate Date',
+        'Certificate Date',
+        'manage_options',
+        'vue-admin-page#/update-activity',
         'vue_admin_render_page'
     );
 }
@@ -196,6 +205,7 @@ function delete_file_path_handler()
         }
     }
 }
+// Update user meta
 add_action('wp_ajax_update_user_meta_value', 'update_user_meta_value');
 function update_user_meta_value()
 {
@@ -216,4 +226,71 @@ function update_user_meta_value()
     }
 
     wp_send_json_success(['message' => 'Notifications updated successfully.']);
+}
+// Update certifacte date
+add_action('wp_ajax_update_activity_meta', 'update_activity_meta');
+function update_activity_meta()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'vue_admin_nonce')) {
+        wp_send_json_error(['message' => 'Invalid nonce.']);
+    }
+
+    global $wpdb;
+
+    $user_id = intval($_POST['user_id']);
+    $course_id = intval($_POST['course_id']);
+    $completion_date = sanitize_text_field($_POST['completion_date']);
+
+    if (empty($user_id) || empty($course_id) || empty($completion_date)) {
+        wp_send_json_error(['message' => 'Missing required fields.']);
+    }
+
+    $table_name = $wpdb->prefix . 'bp_activity';
+
+    // Check for existing record
+    $existing_record = $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM $table_name 
+            WHERE user_id = %d 
+            AND component = 'course' 
+            AND type = 'submit_course' 
+            AND item_id = %d
+            ORDER BY date_recorded DESC
+            LIMIT 1",
+            $user_id,
+            $course_id
+        )
+    );
+
+    if ($existing_record) {
+        // Update existing record
+        $result = $wpdb->update(
+            $table_name,
+            ['date_recorded' => $completion_date],
+            ['id' => $existing_record->id],
+            ['%s'],
+            ['%d']
+        );
+        if (!$result) {
+            wp_send_json_error(['message' => 'Failed to update activity.']);
+        }
+        wp_send_json_success(['message' => 'Activity updated successfully.']);
+    } else {
+        // Insert new record
+        $result = $wpdb->insert(
+            $table_name,
+            [
+                'user_id' => $user_id,
+                'component' => 'course',
+                'type' => 'submit_course',
+                'item_id' => $course_id,
+                'date_recorded' => $completion_date,
+            ],
+            ['%d', '%s', '%s', '%d', '%s']
+        );
+        if (!$result) {
+            wp_send_json_error(['message' => 'Failed to insert new activity.']);
+        }
+        wp_send_json_success(['message' => 'Activity added successfully.']);
+    }
 }

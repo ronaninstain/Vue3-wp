@@ -152,14 +152,14 @@ document.addEventListener("DOMContentLoaded", function () {
           this.message = "User ID and Meta Keys are required.";
           return;
         }
-  
+
         const formData = new FormData();
         formData.append("action", "update_user_meta_value");
         formData.append("user_id", this.userId);
         formData.append("meta_value", this.metaValue);
         formData.append("meta_keys", JSON.stringify(this.metaKeys)); // Pass keys as a JSON string
         formData.append("nonce", vueAdmin.nonce);
-  
+
         try {
           const response = await fetch(vueAdmin.ajaxUrl, {
             method: "POST",
@@ -200,7 +200,65 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
     `,
   };
-  
+
+  const UpdateActivityMeta = {
+    data() {
+      return {
+        userId: "",
+        courseId: "",
+        completionDate: "",
+        message: "",
+      };
+    },
+    methods: {
+      async updateActivity() {
+        if (!this.userId || !this.courseId || !this.completionDate) {
+          this.message = "All fields are required.";
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("action", "update_activity_meta");
+        formData.append("user_id", this.userId);
+        formData.append("course_id", this.courseId);
+        formData.append("completion_date", this.completionDate);
+        formData.append("nonce", vueAdmin.nonce);
+
+        try {
+          const response = await fetch(vueAdmin.ajaxUrl, {
+            method: "POST",
+            body: formData,
+          });
+          const result = await response.json();
+          this.message = result.success
+            ? result.data.message
+            : result.data.message || "Error updating activity.";
+        } catch (error) {
+          console.error("Error updating activity:", error);
+          this.message = "An error occurred while updating activity.";
+        }
+      },
+    },
+    template: `
+      <div>
+        <h2>Update Certificate Completion Date</h2>
+        <div>
+          <label>User ID:</label>
+          <input v-model="userId" placeholder="Enter User ID" />
+        </div>
+        <div>
+          <label>Course ID:</label>
+          <input v-model="courseId" placeholder="Enter Course ID" />
+        </div>
+        <div>
+          <label>Completion Date:</label>
+          <input type="datetime-local" v-model="completionDate" />
+        </div>
+        <button @click="updateActivity">Update Completion Date</button>
+        <p>{{ message }}</p>
+      </div>
+    `,
+  };
 
   const routes = [
     { path: "/", redirect: "/admin-page" },
@@ -209,6 +267,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { path: "/blog-titles", component: BlogTitles },
     { path: "/delete-path", component: DeletePath },
     { path: "/user-meta", component: UserMeta },
+    { path: "/update-activity", component: UpdateActivityMeta },
   ];
 
   const router = createRouter({ history: createWebHashHistory(), routes });
