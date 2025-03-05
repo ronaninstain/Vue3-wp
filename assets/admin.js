@@ -260,6 +260,72 @@ document.addEventListener("DOMContentLoaded", function () {
     `,
   };
 
+  const CourseRatings = {
+    data() {
+        return { ratingStatus: false, message: "" };
+    },
+    async created() {
+        try {
+            const response = await fetch(
+                `${vueAdmin.ajaxUrl}?action=get_rating_status&nonce=${vueAdmin.nonce}`,
+                { method: 'POST' }
+            );
+            const result = await response.json();
+
+            // Debug: Log the initial status
+            console.log("Initial Status:", result);
+
+            this.ratingStatus = result.success ? result.data.status : false;
+        } catch {
+            this.message = "Error loading rating status.";
+        }
+    },
+    methods: {
+        async toggleRatingStatus() {
+            const newStatus = this.ratingStatus ? 0 : 1; // Correctly calculate the new status
+
+            // Debug: Log the new status being sent
+            console.log("Sending status:", newStatus);
+
+            const formData = new FormData();
+            formData.append("action", "toggle_rating_status");
+            formData.append("status", newStatus); // Send the new status
+            formData.append("nonce", vueAdmin.nonce);
+
+            try {
+                const response = await fetch(vueAdmin.ajaxUrl, {
+                    method: "POST",
+                    body: formData,
+                });
+                const result = await response.json();
+
+                // Debug: Log the response
+                console.log("AJAX Response:", result);
+
+                if (result.success) {
+                    this.ratingStatus = result.data.status; // Update the state with the returned status
+                    this.message = result.data.message;
+                } else {
+                    this.message = result.data.message || "Error toggling rating status.";
+                }
+            } catch (error) {
+                console.error("Error toggling rating status:", error);
+                this.message = "Error occurred.";
+            }
+        },
+    },
+    template: `
+      <div>
+        <h2>Course Ratings</h2>
+        <label>
+          <input type="checkbox" v-model="ratingStatus" @change="toggleRatingStatus" />
+          {{ ratingStatus ? 'Disable' : 'Enable' }} Ratings
+        </label>
+        <p>{{ message }}</p>
+      </div>
+    `,
+};
+
   const routes = [
     { path: "/", redirect: "/admin-page" },
     { path: "/admin-page", component: AdminPage },
@@ -268,6 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { path: "/delete-path", component: DeletePath },
     { path: "/user-meta", component: UserMeta },
     { path: "/update-activity", component: UpdateActivityMeta },
+    { path: "/course-ratings", component: CourseRatings },
   ];
 
   const router = createRouter({ history: createWebHashHistory(), routes });

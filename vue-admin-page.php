@@ -90,6 +90,15 @@ function vue_admin_menu()
         'vue-admin-page#/update-activity',
         'vue_admin_render_page'
     );
+
+    add_submenu_page(
+        'vue-admin-page',
+        'Course Ratings',
+        'Course Ratings',
+        'manage_options',
+        'vue-admin-page#/course-ratings',
+        'vue_admin_render_page'
+    );
 }
 add_action('admin_menu', 'vue_admin_menu');
 
@@ -294,3 +303,103 @@ function update_activity_meta()
         wp_send_json_success(['message' => 'Activity added successfully.']);
     }
 }
+// Create a table to store the rating status
+function create_rating_status_table()
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'course_rating_status';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        status tinyint(1) NOT NULL DEFAULT 0,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+
+    // Insert default status if the table is empty
+    $wpdb->insert($table_name, ['status' => 0]);
+}
+register_activation_hook(__FILE__, 'create_rating_status_table');
+
+// Handle AJAX request to get the rating status
+function get_rating_status()
+{
+    check_ajax_referer('vue_admin_nonce', 'nonce');
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'course_rating_status';
+    $status = $wpdb->get_var("SELECT status FROM $table_name WHERE id = 1");
+
+    // Debug: Log the current status
+    error_log("Current status fetched from database: " . $status);
+
+    wp_send_json_success(['status' => $status]);
+}
+add_action('wp_ajax_get_rating_status', 'get_rating_status');
+
+function toggle_rating_status() {
+    check_ajax_referer('vue_admin_nonce', 'nonce');
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'course_rating_status';
+    $status = intval($_POST['status']); // Get the status from the AJAX request
+
+    // Debug: Log the status being updated
+    error_log("Status received from AJAX: " . $status);
+
+    // Update the status in the database
+    $result = $wpdb->update($table_name, ['status' => $status], ['id' => 1]);
+
+    if ($result === false) {
+        error_log("Failed to update status in the database.");
+        wp_send_json_error(['message' => 'Failed to update status in the database.']);
+    } else {
+        // Debug: Fetch the updated status from the database
+        $updated_status = $wpdb->get_var("SELECT status FROM $table_name WHERE id = 1");
+        error_log("Updated status in the database: " . $updated_status);
+
+        wp_send_json_success(['message' => 'Rating status updated successfully.', 'status' => $updated_status]);
+    }
+}
+add_action('wp_ajax_toggle_rating_status', 'toggle_rating_status');
+
+// Conditionally apply the metabox removal code
+function sa_remove_metaboxes()
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'course_rating_status';
+    $status = $wpdb->get_var("SELECT status FROM $table_name WHERE id = 1");
+
+    if ($status == 0) {
+        remove_meta_box('postcustom', 'course', 'normal');
+        remove_meta_box('postcustom', 'unit', 'normal');
+        remove_meta_box('postcustom', 'post', 'normal');
+        remove_meta_box('postcustom', 'page', 'normal');
+        remove_meta_box('commentstatusdiv', 'course', 'normal');
+        remove_meta_box('commentsdiv', 'course', 'normal');
+        remove_meta_box('aam-access-manager', 'course', 'advanced');
+        remove_meta_box('commentstatusdiv', 'unit', 'normal');
+        remove_meta_box('commentsdiv', 'unit', 'normal');
+        remove_meta_box('aam-access-manager', 'unit', 'advanced');
+    }
+}
+add_action('admin_init', 'sa_remove_metaboxes');
+
+// function check_table_contents() {
+//     global $wpdb;
+//     $table_name = $wpdb->prefix . 'course_rating_status';
+
+//     // Check if the table exists
+//     if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+//         var_dump("Table does not exist: $table_name");
+//         return;
+//     }
+
+//     // Get the contents of the table
+//     $results = $wpdb->get_results("SELECT * FROM $table_name");
+//     var_dump($results);
+// }
+// add_action('init', 'check_table_contents');

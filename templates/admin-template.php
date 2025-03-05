@@ -7,6 +7,7 @@
             <li><router-link to="/delete-path">Delete Path</router-link></li>
             <li><router-link to="/user-meta">User Notifications</router-link></li>
             <li><router-link to="/update-activity">Certificate date</router-link></li>
+            <li><router-link to="/course-ratings">Course Ratings</router-link></li>
         </ul>
     </nav>
     <router-view></router-view>

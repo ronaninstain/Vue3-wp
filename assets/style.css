@@ -95,7 +95,7 @@
     font-weight: 500;
 }
 
-#vue-admin-app input:not([type="radio"]) {
+#vue-admin-app input:not([type="radio"], [type="checkbox"]){
     display: block;
     width: 43%;
     height: 44px;
@@ -166,3 +166,7 @@
         flex-wrap: wrap;
     }
 }
+
+/* #vue-admin-app label input[type="checkbox"] {
+    margin-right: 10px;
+} */
